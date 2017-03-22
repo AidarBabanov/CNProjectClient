@@ -4,13 +4,16 @@
 
 import java.io.*;
 import java.net.*;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 public class EchoClient {
     public static void main(String[] args) throws IOException {
+        List<String> filesToChoose = new LinkedList<String>();
+        List<String> sharedFiles = new LinkedList<String>();
 
-        String serverHostname = new String("127.0.0.1");
+        String serverHostname = new String("10.1.169.151");
         if (args.length > 0)
             serverHostname = args[0];
         System.out.println("Attemping to connect to host " +
@@ -19,6 +22,7 @@ public class EchoClient {
         Socket echoSocket = null;
         PrintWriter out = null;
         BufferedReader in = null;
+        String toSend = "";
 
         try {
             echoSocket = new Socket(serverHostname, 10777);
@@ -38,30 +42,38 @@ public class EchoClient {
                 new InputStreamReader(System.in));
         String serverResponse;
         String userInput;
-        List<String> sharedFiles = new ArrayList();
 
         //**********TEST, ADDING FILES*************
-        System.out.println(echoSocket.getInetAddress().toString() + echoSocket.getPort());
-        sharedFiles.add("<'Seka krsauchik', txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
-        sharedFiles.add("<'Seka krasauella', txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
+        sharedFiles.add("<seka, txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
+        sharedFiles.add("<ssekass, txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
         System.out.println(sharedFiles);
         //*****************************************
 
         out.println("HELLO");
         serverResponse = in.readLine();
-        System.out.println(serverResponse);
         if (serverResponse.equals("HI")) {
-            System.out.printf("Yes");
             out.println(sharedFiles.toString());
-//            while ((userInput = stdIn.readLine()) != null) {
-//                out.println(userInput);
-//                System.out.println("echo: " + in.readLine());
-//                System.out.print("input: ");
-//            }
+            System.out.print("Write your command: ");
+            while ((userInput = stdIn.readLine()) != null) {
+                System.out.print("Write your command: ");
+                StringTokenizer st = new StringTokenizer(userInput);
+                String command = st.nextToken();
+                if (command.equals("s")) {
+                    toSend = st.nextToken();
+                    while (st.hasMoreTokens()) {
+                        toSend = toSend + " " + st.nextToken();
+                    }
+                    out.println("SEARCH: " + toSend);
+                    serverResponse = in.readLine();
+                    System.out.println(serverResponse+" au");
+                    //filesToChoose = serverResponse;
+                } else if (command.equals("d")) {
+
+                }
+
+            }
         }
-        else {
-            System.out.println("NO");
-        }
+        System.out.println("Server don't response");
         out.close();
         in.close();
         stdIn.close();
