@@ -1,13 +1,43 @@
+import java.io.File;
+import java.net.Socket;
+import java.util.Calendar;
+import java.util.Date;
+
 /**
  * Created by aidar on 3/21/17.
  */
 public class FMTFile {
     private String filename;
     private String filetype;
-    private int filesize;
+    private long filesize;
     private String lastModified;
     private String ip;
     private int port;
+
+    public FMTFile(File file) {
+        String fullname = file.getName();
+        int dotIndex;
+
+        dotIndex = fullname.lastIndexOf(".");
+        if(dotIndex==-1){
+            filename = fullname.substring(0, fullname.length());
+            filetype = "";
+        }
+        else {
+            filename = fullname.substring(0, dotIndex);
+            filetype = fullname.substring(dotIndex + 1);
+        }
+        filesize = file.length();
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date(file.lastModified()));
+        String year = "" + cal.get(Calendar.YEAR);
+        year.substring(2);
+        lastModified = "" + cal.get(Calendar.DATE) + "/" + cal.get(Calendar.MONTH) + "/" + year;
+        ip = "127.0.0.1";
+        port = 10777;
+        //ip = echoSocket.getLocalAddress().toString().substring(1);
+        //port = echoSocket.getLocalPort();
+    }
 
     /**
      * @param file
@@ -29,42 +59,42 @@ public class FMTFile {
         current = file.charAt(i);
         while (current != ',') {
             current = file.charAt(i);
-            filename += current;
+            if (current != ',') filename += current;
             i++;
         }
-        i += 2;
+        i++;
         current = file.charAt(i);
         while (current != ',') {
             current = file.charAt(i);
-            filetype += current;
+            if (current != ',') filetype += current;
             i++;
         }
-        i += 2;
+        i++;
         current = file.charAt(i);
         while (current != ',') {
             current = file.charAt(i);
-            filesize = filesize * 10 + current - '0';
+            if (current != ',') filesize = filesize * 10 + current - '0';
             i++;
         }
-        i += 2;
+        i++;
         current = file.charAt(i);
         while (current != ',') {
             current = file.charAt(i);
-            lastModified += current;
+            if (current != ',') lastModified += current;
             i++;
         }
-        i += 2;
+        i++;
         current = file.charAt(i);
         while (current != ',') {
             current = file.charAt(i);
-            ip += current;
+            if (current != ',') ip += current;
             i++;
         }
-        i += 2;
+        i++;
         current = file.charAt(i);
-        while (current != ',') {
+        while (current != '>') {
             current = file.charAt(i);
-            port = port * 10 + current - '0';
+            if (current != '>') port = port * 10 + current - '0';
             i++;
         }
     }
@@ -89,11 +119,10 @@ public class FMTFile {
 
         if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) isLeap = true;
         if (month > 12) return false;
-
         if ((month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) && day > 31)
             return false;
         else if (month == 2 && day > 29 && isLeap) return false;
-        else if (month == 2 && day > 28) return false;
+        else if (month == 2 && day > 28 && !isLeap) return false;
         else if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) return false;
         return true;
     }
@@ -109,13 +138,13 @@ public class FMTFile {
         for (int i = 0; i < 4; i++) {
             current = ip.charAt(j);
             if (current == '.' || j >= ip.length()) return false;
-            while (current != '.' || j >= ip.length()) {
+            num = 0;
+            while (current != '.' && j < ip.length()) {
                 current = ip.charAt(j);
-                if (current < '0' || current > '9') return false;
-                num += current - '0';
+                if ((current < '0' || current > '9') && current != '.' && j < ip.length()) return false;
+                if (current != '.' && j < ip.length()) num = num * 10 + current - '0';
                 j++;
             }
-            j++;
             if (num > 255) return false;
         }
         return true;
@@ -126,6 +155,7 @@ public class FMTFile {
      * @return
      */
     public boolean isFile(String file) {
+
         if (file.charAt(0) != '<' || file.charAt(file.length() - 1) != '>') return false;
         int i = 1;
         char current = file.charAt(i);
@@ -136,26 +166,28 @@ public class FMTFile {
             current = file.charAt(i);
             i++;
         }
-        i += 2;
+        if (file.charAt(i) != ' ') return false;
+        i++;
 
         //checking file type
         current = file.charAt(i);
-        if (current == ',') return false;
         while (current != ',') {
             current = file.charAt(i);
             i++;
         }
-        i += 2;
+        if (file.charAt(i) != ' ') return false;
+        i++;
 
         //checking size
         current = file.charAt(i);
         if (current == ',') return false;
         while (current != ',') {
             current = file.charAt(i);
-            if (current > '9' || current < '0') return false;
+            if ((current > '9' || current < '0') && current != ',') return false;
             i++;
         }
-        i += 2;
+        if (file.charAt(i) != ' ') return false;
+        i++;
 
         //checking date
         String date = "";
@@ -163,11 +195,12 @@ public class FMTFile {
         if (current == ',') return false;
         while (current != ',') {
             current = file.charAt(i);
-            date = date + current;
+            if (current != ',') date = date + current;
             i++;
         }
         if (!isDate(date)) return false;
-        i += 2;
+        if (file.charAt(i) != ' ') return false;
+        i++;
 
         //checking ip
         String ip = "";
@@ -175,20 +208,24 @@ public class FMTFile {
         if (current == ',') return false;
         while (current != ',') {
             current = file.charAt(i);
-            ip = ip + current;
+            if (current != ',') ip = ip + current;
             i++;
         }
         if (!isIp(ip)) return false;
-        i += 2;
+        if (file.charAt(i) != ' ') return false;
+        i++;
 
+        //checking port
         current = file.charAt(i);
         if (current == '>') return false;
         while (current != '>') {
             current = file.charAt(i);
-            if (current > '9' || current < '0') return false;
+            if ((current > '9' || current < '0') && current != '>') return false;
             i++;
         }
-        return true;
+
+        if (i == file.length()) return true;
+        else return false;
     }
 
     public String getFilename() {
@@ -199,7 +236,7 @@ public class FMTFile {
         return filetype;
     }
 
-    public int getFilesize() {
+    public long getFilesize() {
         return filesize;
     }
 
@@ -240,11 +277,10 @@ public class FMTFile {
     }
 
     /**
-     *
      * @return
      */
-    public String toString(){
-        return "<"+filename+", "+filetype+", "+filesize+", "+lastModified+", "+ip+", "+port+">";
+    public String toString() {
+        return "<" + filename + ", " + filetype + ", " + filesize + ", " + lastModified + ", " + ip + ", " + port + ">";
     }
 
 }
