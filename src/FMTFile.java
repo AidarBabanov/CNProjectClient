@@ -14,16 +14,22 @@ public class FMTFile {
     private String ip;
     private int port;
 
-    public FMTFile(File file) {
+    /**
+     *
+     * @param file
+     * @param ip
+     * @param port
+     * @throws Exception
+     */
+    public FMTFile(File file, String ip, int port) throws Exception {
         String fullname = file.getName();
         int dotIndex;
-
+        if(!isIp(ip))throw new Exception("Wrong ip!");
         dotIndex = fullname.lastIndexOf(".");
-        if(dotIndex==-1){
+        if (dotIndex == -1) {
             filename = fullname.substring(0, fullname.length());
             filetype = "";
-        }
-        else {
+        } else {
             filename = fullname.substring(0, dotIndex);
             filetype = fullname.substring(dotIndex + 1);
         }
@@ -31,12 +37,14 @@ public class FMTFile {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date(file.lastModified()));
         String year = "" + cal.get(Calendar.YEAR);
-        year.substring(2);
-        lastModified = "" + cal.get(Calendar.DATE) + "/" + cal.get(Calendar.MONTH) + "/" + year;
-        ip = "127.0.0.1";
-        port = 10777;
-        //ip = echoSocket.getLocalAddress().toString().substring(1);
-        //port = echoSocket.getLocalPort();
+        String month = "" + cal.get(Calendar.MONTH);
+        String day = "" + cal.get(Calendar.DATE);
+        if (day.length() == 1) day = '0' + day;
+        if (month.length() == 1) month = '0' + month;
+        year = year.substring(2);
+        lastModified = "" + day + "/" + month + "/" + year;
+        this.ip = ip;
+        this.port = port;
     }
 
     /**

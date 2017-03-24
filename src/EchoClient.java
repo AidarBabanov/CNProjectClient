@@ -4,14 +4,14 @@
 
 import java.io.*;
 import java.net.*;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class EchoClient {
     public static void main(String[] args) throws IOException {
-        List<String> filesToChoose = new LinkedList<String>();
-        List<String> sharedFiles = new LinkedList<String>();
+        List<FMTFile> filesToChoose = new ArrayList<FMTFile>();
+        List<FMTFile> sharedFiles = new ArrayList<FMTFile>();
 
         String serverHostname = new String("10.1.169.151");
         if (args.length > 0)
@@ -40,22 +40,28 @@ public class EchoClient {
 
         BufferedReader stdIn = new BufferedReader(
                 new InputStreamReader(System.in));
-        String serverResponse;
+        String serverResponse = "";
         String userInput;
 
-        //**********TEST, ADDING FILES*************
-        sharedFiles.add("<seka, txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
-        sharedFiles.add("<ssekass, txt, 100, 20/03/17, " + echoSocket.getLocalAddress().toString().substring(1) + ", " + echoSocket.getLocalPort() + ">");
-        System.out.println(sharedFiles);
-        //*****************************************
-
+        File folder = new File("/home/aidar/workspace/CNProjectClient/src/sharing_files");
+        File[] listOfFiles = folder.listFiles();
+        for (int i = 0; i < listOfFiles.length; i++) {
+            if (listOfFiles[i].isFile()) {
+                try {
+                    sharedFiles.add(new FMTFile(listOfFiles[i], echoSocket.getLocalAddress().toString().substring(1), echoSocket.getPort()));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
         out.println("HELLO");
         serverResponse = in.readLine();
         if (serverResponse.equals("HI")) {
             out.println(sharedFiles.toString());
-            System.out.print("Write your command: ");
-            while ((userInput = stdIn.readLine()) != null) {
+            while (true) {
+                serverResponse = "";
                 System.out.print("Write your command: ");
+                userInput = stdIn.readLine();
                 StringTokenizer st = new StringTokenizer(userInput);
                 String command = st.nextToken();
                 if (command.equals("s")) {
@@ -65,8 +71,15 @@ public class EchoClient {
                     }
                     out.println("SEARCH: " + toSend);
                     serverResponse = in.readLine();
-                    System.out.println(serverResponse+" au");
-                    //filesToChoose = serverResponse;
+                    Matcher m = Pattern.compile("\\<(.*?)\\>").matcher(serverResponse);
+                    while (m.find()) {
+                        try {
+                            filesToChoose.add(new FMTFile("<" + m.group(1) + ">"));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    System.out.println(filesToChoose);
                 } else if (command.equals("d")) {
 
                 }
