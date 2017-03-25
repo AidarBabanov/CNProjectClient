@@ -14,15 +14,13 @@ public class EchoClient {
         List<FMTFile> sharedFiles = new ArrayList<FMTFile>();
 
         String serverHostname = new String("10.1.169.151");
-        if (args.length > 0)
-            serverHostname = args[0];
         System.out.println("Attemping to connect to host " +
                 serverHostname + " on port 10777.");
 
         Socket echoSocket = null;
         PrintWriter out = null;
         BufferedReader in = null;
-        String toSend = "";
+        String toSend = null;
 
         try {
             echoSocket = new Socket(serverHostname, 10777);
@@ -59,11 +57,11 @@ public class EchoClient {
         if (serverResponse.equals("HI")) {
             out.println(sharedFiles.toString());
             while (true) {
-                serverResponse = "";
                 System.out.print("Write your command: ");
                 userInput = stdIn.readLine();
                 StringTokenizer st = new StringTokenizer(userInput);
                 String command = st.nextToken();
+
                 if (command.equals("s")) {
                     toSend = st.nextToken();
                     while (st.hasMoreTokens()) {
@@ -71,22 +69,33 @@ public class EchoClient {
                     }
                     out.println("SEARCH: " + toSend);
                     serverResponse = in.readLine();
-                    Matcher m = Pattern.compile("\\<(.*?)\\>").matcher(serverResponse);
-                    while (m.find()) {
-                        try {
-                            filesToChoose.add(new FMTFile("<" + m.group(1) + ">"));
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                    System.out.println(serverResponse);
+                    if (serverResponse.equals("NOT FOUND")) System.out.println(serverResponse);
+                    else if (serverResponse.length() >= 7 && serverResponse.substring(0, 7).equals("FOUND: ")) {
+                        Matcher m = Pattern.compile("\\<(.*?)\\>").matcher(serverResponse.substring(7, serverResponse.length()));
+                        while (m.find()) {
+                            try {
+                                filesToChoose.add(new FMTFile("<" + m.group(1) + ">"));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
+                        System.out.println("FOUND: ");
+                        System.out.println(filesToChoose);
                     }
-                    System.out.println(filesToChoose);
+
                 } else if (command.equals("d")) {
 
+                }
+                else if(command.equals("b")){
+                    out.print("BYE");
+                    System.out.println("End of program...");
+                    break;
                 }
 
             }
         }
-        System.out.println("Server don't response");
+        else System.out.println("Server doesn't response");
         out.close();
         in.close();
         stdIn.close();
