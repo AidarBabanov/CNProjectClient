@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -13,7 +10,7 @@ public class SenderThread implements Runnable {
     private String filename;
     private PrintWriter out = null;
     private BufferedReader in = null;
-
+    private  InputStream fin = null;
     SenderThread(Socket client) {
         this.client = client;
         try {
@@ -32,14 +29,40 @@ public class SenderThread implements Runnable {
 
     @Override
     public void run() {
-        String clientResponse =null;
+        String clientResponse = null;
         try {
             clientResponse = in.readLine();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if(clientResponse.length()>=10 && clientResponse.substring(0, 10).equals("DOWNLOAD: ")){
+        if (clientResponse.length() >= 10 && clientResponse.substring(0, 10).equals("DOWNLOAD: ")) {
             filename = clientResponse.substring(10, clientResponse.length());
+            File file = new File("/home/aidar/workspace/CNProjectClient/src/sharing_files/" + filename);
+            long length = file.length();
+            if (length > Integer.MAX_VALUE) {
+                System.out.println("File is too large.");
+            }
+            byte[] bytes = new byte[16 * 1024];
+
+            try {
+                fin = new FileInputStream(file);
+
+                int count;
+                while ((count = fin.read(bytes)) > 0) {
+                    out.write(String.valueOf(bytes), 0, count);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            out.close();
+            try {
+                in.close();
+                fin.close();
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
