@@ -33,7 +33,7 @@ public class RecieverThread implements Runnable {
     public void run() {
         out.write("DOWNLOAD: "+filename);
         try {
-            fout = new FileOutputStream("/home/aidar/workspace/CNProjectClient/src/sharing_files/"+filename);
+            fout = new FileOutputStream("/home/aidar/workspace/CNProjectClient/src/downloading_files/"+filename);
         } catch (FileNotFoundException ex) {
             System.out.println("File not found. ");
         }

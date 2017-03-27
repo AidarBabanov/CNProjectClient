@@ -14,15 +14,12 @@ public class MainThread implements Runnable {
     public void run() {
         SenderThread sender = null;
         while (true) {
-
             try {
                 sender = new SenderThread(new ServerSocket(4444).accept());
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            sender.run();
+            new Thread(sender).start();
         }
-
-
     }
 }

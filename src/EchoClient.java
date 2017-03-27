@@ -13,14 +13,14 @@ public class EchoClient {
         List<FMTFile> filesToChoose = new ArrayList<FMTFile>();
         List<FMTFile> sharedFiles = new ArrayList<FMTFile>();
 
-        String serverHostname = new String("10.1.169.151");
+        String serverHostname = new String("10.110.127.220");
         System.out.println("Attemping to connect to host " +
                 serverHostname + " on port 10777.");
 
         Socket echoSocket = null;
         PrintWriter out = null;
         BufferedReader in = null;
-        String toSend = null;
+        String toSend;
 
         try {
             echoSocket = new Socket(serverHostname, 10777);
@@ -41,12 +41,12 @@ public class EchoClient {
         String serverResponse = "";
         String userInput;
 
-        File folder = new File("/home/aidar/workspace/CNProjectClient/src/sharing_files");
+        File folder = new File("/home/aidar/workspace/CNProjectClient/sharing_files");
         File[] listOfFiles = folder.listFiles();
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
                 try {
-                    sharedFiles.add(new FMTFile(listOfFiles[i], echoSocket.getLocalAddress().toString().substring(1), echoSocket.getPort()));
+                    sharedFiles.add(new FMTFile(listOfFiles[i], echoSocket.getLocalAddress().toString().substring(1), echoSocket.getLocalPort()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -55,7 +55,12 @@ public class EchoClient {
         out.println("HELLO");
         serverResponse = in.readLine();
         if (serverResponse.equals("HI")) {
+            System.out.println("Connected to the server.");
             out.println(sharedFiles.toString());
+            MainThread recievers = new MainThread();
+            new Thread(recievers).start();
+            System.out.println("Main thread running...");
+
             while (true) {
                 System.out.print("Write your command: ");
                 userInput = stdIn.readLine();
@@ -69,7 +74,6 @@ public class EchoClient {
                     }
                     out.println("SEARCH: " + toSend);
                     serverResponse = in.readLine();
-                    System.out.println(serverResponse);
                     if (serverResponse.equals("NOT FOUND")) System.out.println(serverResponse);
                     else if (serverResponse.length() >= 7 && serverResponse.substring(0, 7).equals("FOUND: ")) {
                         Matcher m = Pattern.compile("\\<(.*?)\\>").matcher(serverResponse.substring(7, serverResponse.length()));
@@ -85,17 +89,19 @@ public class EchoClient {
                     }
 
                 } else if (command.equals("d")) {
-
-                }
-                else if(command.equals("b")){
+                    FMTFile download = filesToChoose.get(0);
+                    System.out.println(download.getIp() + " " + download.getPort());
+                    Socket downloadSocket = new Socket(download.getIp(), download.getPort());
+                    RecieverThread recieve = new RecieverThread(downloadSocket, download.getFilename() + "." + download.getFiletype());
+                    new Thread(recieve).start();
+                } else if (command.equals("b")) {
                     out.print("BYE");
                     System.out.println("End of program...");
                     break;
                 }
 
             }
-        }
-        else System.out.println("Server doesn't response");
+        } else System.out.println("Server doesn't response");
         out.close();
         in.close();
         stdIn.close();

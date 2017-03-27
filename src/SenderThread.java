@@ -37,7 +37,7 @@ public class SenderThread implements Runnable {
         }
         if (clientResponse.length() >= 10 && clientResponse.substring(0, 10).equals("DOWNLOAD: ")) {
             filename = clientResponse.substring(10, clientResponse.length());
-            File file = new File("/home/aidar/workspace/CNProjectClient/src/sharing_files/" + filename);
+            File file = new File("/home/aidar/workspace/CNProjectClient/sharing_files" + filename);
             long length = file.length();
             if (length > Integer.MAX_VALUE) {
                 System.out.println("File is too large.");
