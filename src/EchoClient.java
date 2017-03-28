@@ -22,6 +22,8 @@ public class EchoClient {
         BufferedReader in = null;
         String toSend;
 
+        ServerSocket server = new ServerSocket(0);
+
         try {
             echoSocket = new Socket(serverHostname, 10777);
             out = new PrintWriter(echoSocket.getOutputStream(), true);
@@ -46,7 +48,7 @@ public class EchoClient {
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
                 try {
-                    sharedFiles.add(new FMTFile(listOfFiles[i], echoSocket.getLocalAddress().toString().substring(1), echoSocket.getLocalPort()));
+                    sharedFiles.add(new FMTFile(listOfFiles[i], echoSocket.getLocalAddress().toString().substring(1), server.getLocalPort()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -56,8 +58,11 @@ public class EchoClient {
         serverResponse = in.readLine();
         if (serverResponse.equals("HI")) {
             System.out.println("Connected to the server.");
+            System.out.println("IP: " + echoSocket.getLocalAddress().toString().substring(1));
+            System.out.println("Server port: " + server.getLocalPort());
+            System.out.println("Client port: " + echoSocket.getLocalPort());
             out.println(sharedFiles.toString());
-            MainThread recievers = new MainThread();
+            MainThread recievers = new MainThread(server);
             new Thread(recievers).start();
             System.out.println("Main thread running...");
 
@@ -90,7 +95,6 @@ public class EchoClient {
 
                 } else if (command.equals("d")) {
                     FMTFile download = filesToChoose.get(0);
-                    System.out.println(download.getIp() + " " + download.getPort());
                     Socket downloadSocket = new Socket(download.getIp(), download.getPort());
                     RecieverThread recieve = new RecieverThread(downloadSocket, download.getFilename() + "." + download.getFiletype());
                     new Thread(recieve).start();
@@ -101,7 +105,7 @@ public class EchoClient {
                 }
 
             }
-        } else System.out.println("Server doesn't response");
+        } else System.out.println("Server doesn't respond.");
         out.close();
         in.close();
         stdIn.close();

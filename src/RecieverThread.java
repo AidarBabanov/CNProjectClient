@@ -11,7 +11,7 @@ public class RecieverThread implements Runnable {
     private PrintWriter out = null;
     private InputStream in = null;
     private String serverResponse = null;
-    OutputStream fout = null;
+    private OutputStream fout = null;
 
     RecieverThread(Socket server, String filename) {
         this.filename = filename;
@@ -33,7 +33,7 @@ public class RecieverThread implements Runnable {
     public void run() {
         out.write("DOWNLOAD: "+filename);
         try {
-            fout = new FileOutputStream("/home/aidar/workspace/CNProjectClient/src/downloading_files/"+filename);
+            fout = new FileOutputStream("/home/aidar/workspace/CNProjectClient/downloading_files/"+filename);
         } catch (FileNotFoundException ex) {
             System.out.println("File not found. ");
         }
@@ -41,6 +41,7 @@ public class RecieverThread implements Runnable {
 
         int count;
         try {
+            System.out.println("Downloading...");
             while ((count = in.read(bytes)) > 0) {
                 fout.write(bytes, 0, count);
             }
@@ -56,6 +57,6 @@ public class RecieverThread implements Runnable {
             e.printStackTrace();
         }
 
-
+        System.out.println("Download finished.");
     }
 }

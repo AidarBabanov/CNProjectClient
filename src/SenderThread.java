@@ -11,6 +11,7 @@ public class SenderThread implements Runnable {
     private PrintWriter out = null;
     private BufferedReader in = null;
     private  InputStream fin = null;
+
     SenderThread(Socket client) {
         this.client = client;
         try {
@@ -48,6 +49,7 @@ public class SenderThread implements Runnable {
                 fin = new FileInputStream(file);
 
                 int count;
+                System.out.println("File sending...");
                 while ((count = fin.read(bytes)) > 0) {
                     out.write(String.valueOf(bytes), 0, count);
                 }
@@ -64,5 +66,6 @@ public class SenderThread implements Runnable {
                 e.printStackTrace();
             }
         }
+        System.out.println("Sending finished.");
     }
 }
