@@ -8,17 +8,16 @@ import java.net.UnknownHostException;
 public class RecieverThread implements Runnable {
     private Socket server;
     private String filename;
-    private PrintWriter out = null;
+    private PrintStream out = null;
     private InputStream in = null;
-    private String serverResponse = null;
     private OutputStream fout = null;
 
-    RecieverThread(Socket server, String filename) {
-        this.filename = filename;
-        this.server = server;
+    RecieverThread(Socket newServer, String newFilename) {
+        this.filename = newFilename;
+        this.server = newServer;
         try {
-            out = new PrintWriter(server.getOutputStream(), true);
-            in = in = server.getInputStream();
+            out = new PrintStream(server.getOutputStream(), true);
+            in = server.getInputStream();
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host: " + server.getInetAddress());
             System.exit(1);
@@ -31,7 +30,8 @@ public class RecieverThread implements Runnable {
 
     @Override
     public void run() {
-        out.write("DOWNLOAD: "+filename);
+        out.println("DOWNLOAD: "+filename);
+        out.flush();
         try {
             fout = new FileOutputStream("/home/aidar/workspace/CNProjectClient/downloading_files/"+filename);
         } catch (FileNotFoundException ex) {

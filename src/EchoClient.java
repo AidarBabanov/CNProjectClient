@@ -13,7 +13,7 @@ public class EchoClient {
         List<FMTFile> filesToChoose = new ArrayList<FMTFile>();
         List<FMTFile> sharedFiles = new ArrayList<FMTFile>();
 
-        String serverHostname = new String("10.110.127.220");
+        String serverHostname = new String("10.110.100.216");
         System.out.println("Attemping to connect to host " +
                 serverHostname + " on port 10777.");
 
@@ -62,8 +62,8 @@ public class EchoClient {
             System.out.println("Server port: " + server.getLocalPort());
             System.out.println("Client port: " + echoSocket.getLocalPort());
             out.println(sharedFiles.toString());
-            MainThread recievers = new MainThread(server);
-            new Thread(recievers).start();
+            Thread serverThread = new Thread(new MainThread(server));
+            serverThread.start();
             System.out.println("Main thread running...");
 
             while (true) {
@@ -94,10 +94,12 @@ public class EchoClient {
                     }
 
                 } else if (command.equals("d")) {
+
                     FMTFile download = filesToChoose.get(0);
                     Socket downloadSocket = new Socket(download.getIp(), download.getPort());
                     RecieverThread recieve = new RecieverThread(downloadSocket, download.getFilename() + "." + download.getFiletype());
                     new Thread(recieve).start();
+
                 } else if (command.equals("b")) {
                     out.print("BYE");
                     System.out.println("End of program...");
@@ -105,7 +107,10 @@ public class EchoClient {
                 }
 
             }
+            server.close();
+            serverThread.interrupt();
         } else System.out.println("Server doesn't respond.");
+
         out.close();
         in.close();
         stdIn.close();

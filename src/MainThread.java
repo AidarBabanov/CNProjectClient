@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.SocketException;
 
 /**
  * Created by aidar on 3/27/17.
@@ -12,15 +13,15 @@ public class MainThread implements Runnable {
 
     @Override
     public void run() {
-        SenderThread sender = null;
-        while (true) {
+
+        while (!Thread.interrupted()) {
             try {
-                sender = new SenderThread(server.accept());
+                new Thread(new SenderThread(server.accept())).start();
                 System.out.println("Client connected.");
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+
             }
-            new Thread(sender).start();
+
         }
     }
 }

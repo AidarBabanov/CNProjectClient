@@ -8,14 +8,14 @@ import java.net.UnknownHostException;
 public class SenderThread implements Runnable {
     private Socket client;
     private String filename;
-    private PrintWriter out = null;
+    private OutputStream out = null;
     private BufferedReader in = null;
-    private  InputStream fin = null;
+    private InputStream fin = null;
 
-    SenderThread(Socket client) {
-        this.client = client;
+    SenderThread(Socket newClient) {
+        this.client = newClient;
         try {
-            out = new PrintWriter(client.getOutputStream(), true);
+            out =client.getOutputStream();
             in = new BufferedReader(new InputStreamReader(
                     client.getInputStream()));
         } catch (UnknownHostException e) {
@@ -31,6 +31,7 @@ public class SenderThread implements Runnable {
     @Override
     public void run() {
         String clientResponse = null;
+
         try {
             clientResponse = in.readLine();
         } catch (IOException e) {
@@ -38,7 +39,8 @@ public class SenderThread implements Runnable {
         }
         if (clientResponse.length() >= 10 && clientResponse.substring(0, 10).equals("DOWNLOAD: ")) {
             filename = clientResponse.substring(10, clientResponse.length());
-            File file = new File("/home/aidar/workspace/CNProjectClient/sharing_files" + filename);
+            File file = new File("/home/aidar/workspace/CNProjectClient/sharing_files/" +
+                    "" + filename);
             long length = file.length();
             if (length > Integer.MAX_VALUE) {
                 System.out.println("File is too large.");
@@ -47,18 +49,17 @@ public class SenderThread implements Runnable {
 
             try {
                 fin = new FileInputStream(file);
-
                 int count;
                 System.out.println("File sending...");
                 while ((count = fin.read(bytes)) > 0) {
-                    out.write(String.valueOf(bytes), 0, count);
+                    out.write(bytes, 0, count);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            out.close();
             try {
+                out.close();
                 in.close();
                 fin.close();
                 client.close();
@@ -67,5 +68,6 @@ public class SenderThread implements Runnable {
             }
         }
         System.out.println("Sending finished.");
+
     }
 }
