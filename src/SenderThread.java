@@ -15,7 +15,7 @@ public class SenderThread implements Runnable {
     SenderThread(Socket newClient) {
         this.client = newClient;
         try {
-            out =client.getOutputStream();
+            out = client.getOutputStream();
             in = new BufferedReader(new InputStreamReader(
                     client.getInputStream()));
         } catch (UnknownHostException e) {

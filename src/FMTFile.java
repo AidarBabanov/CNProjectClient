@@ -1,7 +1,6 @@
 import java.io.File;
 import java.net.Socket;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by aidar on 3/21/17.
@@ -13,6 +12,22 @@ public class FMTFile {
     private String lastModified;
     private String ip;
     private int port;
+
+    /**
+     *
+     * @param file
+     */
+    public FMTFile(Vector<String> file){
+        setFilename(file.get(0));
+        setFiletype(file.get(1));
+        setFilesize(Integer.parseInt(file.get(2)));
+        setLastModified(file.get(3));
+        setIp(file.get(4));
+        setPort(Integer.parseInt(file.get(5)));
+    }
+
+
+
 
     /**
      *
@@ -37,12 +52,12 @@ public class FMTFile {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date(file.lastModified()));
         String year = "" + cal.get(Calendar.YEAR);
-        String month = "" + cal.get(Calendar.MONTH);
+        String month = String.valueOf(cal.get(Calendar.MONTH)+1);
         String day = "" + cal.get(Calendar.DATE);
         if (day.length() == 1) day = '0' + day;
         if (month.length() == 1) month = '0' + month;
         year = year.substring(2);
-        lastModified = "" + day + "/" + month + "/" + year;
+        lastModified = day + "/" + month + "/" + year;
         this.ip = ip;
         this.port = port;
     }
@@ -111,7 +126,7 @@ public class FMTFile {
      * @param date
      * @return
      */
-    public boolean isDate(String date) {
+    public boolean isDate(String date) throws Exception {
         int day = 0, month = 0, year = 0;
         boolean isLeap = false;
 
@@ -162,19 +177,19 @@ public class FMTFile {
      * @param file
      * @return
      */
-    public boolean isFile(String file) {
+    public boolean isFile(String file) throws Exception {
 
-        if (file.charAt(0) != '<' || file.charAt(file.length() - 1) != '>') return false;
+        if (file.charAt(0) != '<' || file.charAt(file.length() - 1) != '>') throw new Exception("No brackets.");
         int i = 1;
         char current = file.charAt(i);
 
         //checking filename
-        if (current == ',') return false;
+        if (current == ',') throw new Exception("No filename");
         while (current != ',') {
             current = file.charAt(i);
             i++;
         }
-        if (file.charAt(i) != ' ') return false;
+        if (file.charAt(i) != ' ') throw new Exception("No space character after filename.");
         i++;
 
         //checking file type
@@ -183,57 +198,57 @@ public class FMTFile {
             current = file.charAt(i);
             i++;
         }
-        if (file.charAt(i) != ' ') return false;
+        if (file.charAt(i) != ' ') throw new Exception("No space character after file type.");
         i++;
 
         //checking size
         current = file.charAt(i);
-        if (current == ',') return false;
+        if (current == ',') throw new Exception("No file size.");
         while (current != ',') {
             current = file.charAt(i);
-            if ((current > '9' || current < '0') && current != ',') return false;
+            if ((current > '9' || current < '0') && current != ',') throw new Exception("Wrong file size.");
             i++;
         }
-        if (file.charAt(i) != ' ') return false;
+        if (file.charAt(i) != ' ') throw new Exception("No space character after file size.");
         i++;
 
         //checking date
         String date = "";
         current = file.charAt(i);
-        if (current == ',') return false;
+        if (current == ',') throw new Exception("No file size.");
         while (current != ',') {
             current = file.charAt(i);
             if (current != ',') date = date + current;
             i++;
         }
-        if (!isDate(date)) return false;
-        if (file.charAt(i) != ' ') return false;
+        if (!isDate(date)) throw new Exception("Wrong date format.");
+        if (file.charAt(i) != ' ') throw new Exception("No space character after date.");
         i++;
 
         //checking ip
         String ip = "";
         current = file.charAt(i);
-        if (current == ',') return false;
+        if (current == ',') throw new Exception("No ip.");
         while (current != ',') {
             current = file.charAt(i);
             if (current != ',') ip = ip + current;
             i++;
         }
-        if (!isIp(ip)) return false;
-        if (file.charAt(i) != ' ') return false;
+        if (!isIp(ip)) throw new Exception("Wrong IP format.");
+        if (file.charAt(i) != ' ') throw new Exception("No space character after date.");
         i++;
 
         //checking port
         current = file.charAt(i);
-        if (current == '>') return false;
+        if (current == '>') throw new Exception("No port.");
         while (current != '>') {
             current = file.charAt(i);
-            if ((current > '9' || current < '0') && current != '>') return false;
+            if ((current > '9' || current < '0') && current != '>') throw new Exception("Wrong port.");
             i++;
         }
 
         if (i == file.length()) return true;
-        else return false;
+        else throw new Exception("Waste information after closing bracket.");
     }
 
     public String getFilename() {
@@ -289,6 +304,17 @@ public class FMTFile {
      */
     public String toString() {
         return "<" + filename + ", " + filetype + ", " + filesize + ", " + lastModified + ", " + ip + ", " + port + ">";
+    }
+
+    public List<String> toList(){
+        Vector<String> result = new Vector<String>();
+        result.add(filename);
+        result.add(filetype);
+        result.add(filesize+"");
+        result.add(lastModified);
+        result.add(ip);
+        result.add(port+"");
+        return result;
     }
 
 }
